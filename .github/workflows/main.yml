@@ -42,17 +42,36 @@ jobs:
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
             -Dsonar.projectVersion=1.0 \
-            -Dsonar.sources=src/ \
-            -Dsonar.junit.reportsPath=target/surefire-reports/ \
-            -Dsonar.jacoco.reportsPath=target/jacoco.exec \
-            -Dsonar.java.binaries=target/test-classes/ \
+            -Dsonar.sources=src \
+            -Dsonar.junit.reportsPath=target/surefire-reports \
+            -Dsonar.java.binaries=target/classes \
             -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml
-            -Dsonar.java.binaries=target/test-classes/com/visualpaths
-            
 
       - name: Wait for SonarCloud Quality Gate
         uses: sonarsource/sonarqube-quality-gate-action@master
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_URL }}
+          SONAR_HOST_URL: https://sonarcloud.io
+
+  BUILD_AND_PUBLISH:
+    needs: Testing
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Upload image to ECR
+        uses: appleboy/docker-ecr-action@master
+        with:
+          access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          registry: ${{ secrets.REGISTRY }}
+          cache_from: ${{ secrets.cache }}
+          repo: ${{ env.ECR_REPOSITORY }}
+          region: ${{ env.AWS_DEFAULT_REGION }}
+          auto_tag: latest,${{ github.run_number }}
+          daemon_off: false
+          dockerfile: ./Dockerfile
+          context: .
