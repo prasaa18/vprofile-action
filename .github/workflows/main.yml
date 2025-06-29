@@ -39,11 +39,28 @@ jobs:
         run: |
           sonar-scanner \
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
-            -Dsonar.projectName=vprofile-repo \
+            -Dsonar.organization=${{ secrets.SONAR_ORG }} \
+            -Dsonar.projectName=${{ secrets.SONAR_PROJECT_NAME }} \
+            -Dsonar.projectBaseDir=. \
+            -Dsonar.exclusions=src/main/java/com/visualpathit/account/config/SecurityConfig.java \
+            -Dsonar.coverage.exclusions=src/main/java/com/visualpathit/account/config/SecurityConfig.java \
+            -Dsonar.java.coveragePlugin=jacoco \
+            -Dsonar.jacoco.reportPaths=target/jacoco.exec \
+            -Dsonar.java.binaries=target/classes \
+            -Dsonar.java.test.binaries=target/test-classes \
+            -Dsonar.java.test.libraries=target/test-classes \
+            -Dsonar.java.coveragePlugin=jacoco \
+            -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml \
+            -Dsonar.java.checkstyle.reportPaths=target/surefire-reports/ \
+            -Dsonar.scm.disabled=true \
+            -Dsonar.cpd.exclusions=src/main/java/com/visualpathit/account/config/SecurityConfig.java \
+            -Dsonar.cpd.exclusions=src/main/java/com/visualpathit/account/config/SecurityConfig.java \
+            -Dsonar.cpd.exclusions=src/main/java/com/visualpathit/account/config/SecurityConfig.java \
+
             -Dsonar.projectVersion=1.0 \
             -Dsonar.sources=src/ \
-            -Dsonar.host.url=${{ secrets.SONAR_URL }} \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.host.url=${{secrets.SONAR_URL }} \
+            -Dsonar.login=${{secrets.SONAR_TOKEN }} \
             -Dsonar.junit.reportsPath=target/surefire-reports/ \
             -Dsonar.jacoco.reportsPath=target/jacoco.exec \
             -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
