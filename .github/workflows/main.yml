@@ -1,9 +1,9 @@
 name: vprofile-actions
 
-on: 
+on:
   workflow_dispatch:
 
-env: 
+env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   BUCKET_TF_STATE: ${{ secrets.BUCKET_TF_STATE }}
@@ -14,7 +14,6 @@ env:
 jobs:
   Testing:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -25,30 +24,32 @@ jobs:
           java-version: 11
           distribution: 'temurin'
 
-      - name: Run Maven Tests
+      - name: Run Maven tests
         run: mvn test
 
       - name: Run Checkstyle
         run: mvn checkstyle:checkstyle
 
-      - name: Set up SonarQube Scanner
+      - name: Set up SonarScanner
         uses: warchant/setup-sonar-scanner@v7
 
       - name: SonarQube Scan
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           sonar-scanner \
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
+            -Dsonar.projectName=vprofile-repo \
+            -Dsonar.projectVersion=1.0 \
+            -Dsonar.sources=src/ \
             -Dsonar.host.url=${{ secrets.SONAR_URL }} \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-            -Dsonar.organization=${{ secrets.SONAR_ORG }} \
-            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
-            -Dsonar.sources=src/ \
-            -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
             -Dsonar.junit.reportsPath=target/surefire-reports/ \
             -Dsonar.jacoco.reportsPath=target/jacoco.exec \
+            -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
             -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml
 
-      - name: SonarQube Quality Gate Check
-        id: sonarqube-quality-gate
+      - name: Wait for SonarQube Quality Gate result
         uses: sonarsource/sonarqube-quality-gate-action@master
         timeout-minutes: 5
         env:
