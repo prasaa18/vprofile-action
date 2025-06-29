@@ -40,7 +40,7 @@ jobs:
           sonar-scanner \
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
             -Dsonar.organization=${{ secrets.SONAR_ORG }} \
-            -Dsonar.projectName=${{ secrets.SONAR_PROJECT_NAME }} \
+            
             -Dsonar.projectBaseDir=. \
             -Dsonar.exclusions=src/main/java/com/visualpathit/account/config/SecurityConfig.java \
             -Dsonar.coverage.exclusions=src/main/java/com/visualpathit/account/config/SecurityConfig.java \
