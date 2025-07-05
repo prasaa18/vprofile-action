@@ -4,16 +4,17 @@ metadata:
   name: vpro-ingress
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   ingressClassName: nginx
   rules:
-  - host: vprofile.bits.work.gd
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: my-app
-            port:
-              number: 8080
+    - host: vprofile.bits.work.gd
+      http:
+        paths:
+          - path: /.*   # regex works here
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: my-app
+                port:
+                  number: 8080
