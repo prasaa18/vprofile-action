@@ -7,7 +7,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: vprofile..bits.work.gd
+  - host: vprofile.bits.work.gd
     http:
       paths:
       - path: /
