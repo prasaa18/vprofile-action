@@ -77,37 +77,47 @@ jobs:
           context: .
 
   DeployTOEKS:
-     needs: BUILD_AND_PUBLISH
-     runs-on: ubuntu-latest
+    needs: BUILD_AND_PUBLISH
+    runs-on: ubuntu-latest
 
-     steps:
-       - name: Checkout code
-         uses: actions/checkout@v4
-      
-       - name: Configure AWS credetials
-         uses: aws-actions/configure-aws-credentials@v1
-         with:
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
 
-       - name: Get the kube config file
-         run: aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_DEFAULT_REGION
-       
-       - name: Print config file
-         run: cat ~/.kube/config
-       
-       - name: loging to aws ecr
-         run: kubectl create secret docker-registry regcred --docker-server={{secrets.REGISTRY}} --docker-username=AWS --docker-password=$(aws ecr get-login-password) 
-       
-       - name: deploy to helm
-         uses: bitovi/github-actions-deploy-eks-helm@v1.2.0
-         with:
-           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-           aws-region: ${{ env.AWS_DEFAULT_REGION }}
-           cluster-name: ${{env.EKS_CLUSTER_NAME}}
-           chart-path: helm/vprofilecharts
-           namespace: default
-           values: appimage=${{ secrets.REGISTRY}}/${{ env.ECR_REPOSITORY }},apptag=${{github.run_number}}
-           name: vprofile-stack
+      - name: Get the kube config file
+        run: aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_DEFAULT_REGION
+
+      - name: Print config file (optional, for debug)
+        run: cat ~/.kube/config
+
+      - name: Create or Update regcred secret
+        env:
+          REGISTRY: ${{ secrets.REGISTRY }}
+        run: |
+          if kubectl get secret regcred >/dev/null 2>&1; then
+            echo "Secret regcred already exists. Deleting..."
+            kubectl delete secret regcred
+          fi
+          kubectl create secret docker-registry regcred \
+            --docker-server=$REGISTRY \
+            --docker-username=AWS \
+            --docker-password=$(aws ecr get-login-password)
+
+      - name: Deploy using Helm
+        uses: bitovi/github-actions-deploy-eks-helm@v1.2.0
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+          cluster-name: ${{ env.EKS_CLUSTER_NAME }}
+          chart-path: helm/vprofilecharts
+          namespace: default
+          values: appimage=${{ secrets.REGISTRY }}/${{ env.ECR_REPOSITORY }},apptag=${{ github.run_number }}
+          name: vprofile-stack
